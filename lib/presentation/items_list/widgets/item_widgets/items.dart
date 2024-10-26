@@ -1,13 +1,20 @@
-import '../../../../domain/entity/item_entity.dart';
-import '../../bloc/item_state.dart';
-import '../item_bar_graph/generate_bars.dart';
+import 'package:expense_tracker/core/application/theme/colors.dart';
+import 'package:expense_tracker/navigations/route_generator.dart';
+import 'package:expense_tracker/presentation/dashboard/bloc/graph_bloc/graph_bloc.dart';
+import 'package:expense_tracker/presentation/dashboard/page/dashboard.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../domain/entity/expense_details_entity.dart';
 import 'single_item.dart';
 
 import 'package:flutter/material.dart';
 
 class MyItems extends StatefulWidget {
-  final List<ItemEntity>? itemList;
-  const MyItems({super.key, required this.itemList});
+  final List<ExpenseDetailsEntity>? itemList;
+  static const path = 'MyItems';
+  final GraphBloc graphBloc;
+
+  const MyItems({super.key, required this.itemList, required this.graphBloc});
 
   @override
   State<MyItems> createState() => _MyItemsState();
@@ -32,13 +39,13 @@ class _MyItemsState extends State<MyItems> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: myAppBar(context),
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      // backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: MyColors.surface,
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 20),
-            GenerateBars().myBarChart(widget.itemList),
-            Expanded(child: _buildItems(widget.itemList)),
+            if (widget.itemList != null)
+              Expanded(child: _buildItems(widget.itemList!)),
           ],
         ),
       ),
@@ -47,6 +54,11 @@ class _MyItemsState extends State<MyItems> with SingleTickerProviderStateMixin {
 
   AppBar myAppBar(BuildContext context) {
     return AppBar(
+      leading: IconButton(
+          onPressed: () {
+            context.go('/${Dashboard.path}');
+          },
+          icon: const Icon(Icons.arrow_back)),
       centerTitle: true,
       title: Text(
         'Expense Tracker',
@@ -55,13 +67,14 @@ class _MyItemsState extends State<MyItems> with SingleTickerProviderStateMixin {
           fontWeight: FontWeight.bold,
         ),
       ),
-      backgroundColor: Theme.of(context).colorScheme.primary,
+      // backgroundColor: Theme.of(context).colorScheme.primary,
+      backgroundColor: MyColors.primary,
     );
   }
 
-  ListView _buildItems(List<ItemEntity>? itemList) {
+  ListView _buildItems(List<ExpenseDetailsEntity> itemList) {
     return ListView.builder(
-      itemCount: itemList!.length,
+      itemCount: itemList.length,
       itemBuilder: (context, index) {
         return AnimatedBuilder(
           animation: _controller,
@@ -75,7 +88,7 @@ class _MyItemsState extends State<MyItems> with SingleTickerProviderStateMixin {
 
   Transform _animatedItem(
     BuildContext context,
-    ItemEntity item,
+    ExpenseDetailsEntity item,
   ) {
     return Transform.translate(
       offset: Offset(
@@ -86,6 +99,7 @@ class _MyItemsState extends State<MyItems> with SingleTickerProviderStateMixin {
         opacity: _controller.value,
         child: SingleItem(
           item: item,
+          graphBloc: widget.graphBloc,
         ),
       ),
     );
